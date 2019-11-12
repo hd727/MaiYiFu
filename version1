@@ -1,0 +1,117 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 11 19:44:15 2019
+
+@author: johns
+"""
+
+import requests
+import random
+import time
+import socket
+import http.client
+import urllib
+import json
+import re
+import csv
+from bs4 import BeautifulSoup
+from itertools import zip_longest
+
+def get_content(url , data = None):
+    header={
+            
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'
+    }
+    timeout = random.choice(range(80, 180))
+    while True:
+        try:
+            rep = requests.get(url,headers = header,timeout = timeout)
+            rep.encoding = 'utf-8'
+            # req = urllib.request.Request(url, data, header)
+            # response = urllib.request.urlopen(req, timeout=timeout)
+            # html1 = response.read().decode('UTF-8', errors='ignore')
+            # response.close()
+            break
+        # except urllib.request.HTTPError as e:
+        #         print( '1:', e)
+        #         time.sleep(random.choice(range(5, 10)))
+        #
+        # except urllib.request.URLError as e:
+        #     print( '2:', e)
+        #     time.sleep(random.choice(range(5, 10)))
+        except socket.timeout as e:
+            print( '3:', e)
+            time.sleep(random.choice(range(8,15)))
+
+        except socket.error as e:
+            print( '4:', e)
+            time.sleep(random.choice(range(20, 60)))
+
+        except http.client.BadStatusLine as e:
+            print( '5:', e)
+            time.sleep(random.choice(range(30, 80)))
+
+        except http.client.IncompleteRead as e:
+            print( '6:', e)
+            time.sleep(random.choice(range(5, 15)))
+
+    return rep.text
+"""
+#print specific html
+url='https://stockx.com/supreme/sweatshirts?page=1'
+html=get_content(url)
+soup=BeautifulSoup(html, features="lxml")
+data0=soup.find_all('script', type='application/ld+json')[-1] #-1 is the last element which tag name is script
+datajson=data0.text # remove the tag
+dataload=json.loads(datajson)
+print(dataload)
+
+"""
+def write_data(data, name):
+    file_name = name
+    with open(file_name, 'a', errors='ignore', newline='') as f:
+            f_csv = csv.writer(f, delimiter='\t')
+            f_csv.writerows(data)
+
+
+for x in range(1,2):
+    url_raw='https://stockx.com/supreme/sweatshirts?page='
+    url=url_raw+str(x)
+    
+    html=get_content(url)
+    soup=BeautifulSoup(html, features="lxml")
+    
+    data0=soup.find_all('script', type='application/ld+json')[-1] #-1 is the last element which tag name is script
+    datajson=data0.text # remove the tag
+    dataload=json.loads(datajson)    
+    realjson=dataload["itemListElement"]
+    
+    for item in realjson[:5]:
+        imgurl=item["item"]["image"]
+        position=item["position"]
+        filename="D:\\Python\\Yifu\\"+"supreme_ss_"+str((x-1)*40+position)+".jpg"
+        
+        releaseDate=item["item"]["releaseDate"]
+        brand=item["item"]["brand"]
+        highPrice=item["item"]["offers"]["highPrice"]
+        
+        csvData=[releaseDate, brand, highPrice]
+        export_data = zip_longest(*csvData, fillvalue = '')
+        write_data(export_data, "D:\\Python\\Yifu\\test.csv")
+        
+        if bool(re.search(r"Placeholder-Default", imgurl))==False:  ##make sure img is there,if not, placeholder in url
+            urllib.request.urlretrieve(imgurl,filename)
+        
+"""
+url='https://stockx.com/supreme/sweatshirts?page=1'
+html=get_content(url)
+soup=BeautifulSoup(html, features="lxml")
+data0=soup.find_all('script', type='application/ld+json')[-1] #-1 is the last element which tag name is script
+datajson=data0.text # remove the tag
+dataload=json.loads(datajson)
+print(dataload)
+"""
